@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "esbuild": "^0.28.2",
+    "mdast-util-from-markdown": "^2.1.0",
+    "nostr-tools": "^2.25.4",
+    "yaml": "^2.9.1"
+  },
+  "name": "gooseagy-plugin-build",
+  "private": true,
+  "type": "module"
+}

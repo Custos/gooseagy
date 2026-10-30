@@ -1,0 +1,24 @@
+{
+  "id": "local.gooseagy",
+  "name": "Antigravity Ultra",
+  "apiVersion": 1,
+  "description": "Use your Google AI Ultra account through the official agy CLI, with Buzz tools and conversation sessions.",
+  "discovery": {
+    "category": "agents",
+    "tags": [
+      "Antigravity",
+      "Gemini",
+      "Ultra"
+    ]
+  },
+  "host": {
+    "processes": [
+      {
+        "id": "agent",
+        "program": "agy-acp"
+      }
+    ],
+    "mcp": true,
+    "files": true
+  }
+}

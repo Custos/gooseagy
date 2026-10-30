@@ -1,0 +1,11 @@
+gooseagy
+
+Community adapter code is provided under the Apache License, Version 2.0.
+The Buzz plugin contains adapted code from https://github.com/block/buzz-app
+at revision 1c0f6d68ae11d834f6ac8a9287b3b983cc967275.
+Copyright 2026 Block, Inc.
+
+See buzz-plugin/NOTICE.md for modifications and buzz-plugin/UPSTREAM_NOTICE.md
+for the upstream attribution. The full upstream Apache license and notices are
+also included in the generated plugin. Third-party dependency license notices
+are retained in the bundle. No app artwork is packaged by this adapter.

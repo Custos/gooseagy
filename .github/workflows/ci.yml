@@ -1,0 +1,43 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.11', '3.13', '3.15']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - run: python3 -m unittest discover -s tests -v
+      - run: node tests/plugin_contract.mjs
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: scripts/package-lock.json
+      - name: Fetch pinned upstream source
+        run: |
+          git init "$RUNNER_TEMP/buzz-app"
+          git -C "$RUNNER_TEMP/buzz-app" remote add origin https://github.com/block/buzz-app.git
+          git -C "$RUNNER_TEMP/buzz-app" fetch --depth=1 origin 1c0f6d68ae11d834f6ac8a9287b3b983cc967275
+          git -C "$RUNNER_TEMP/buzz-app" checkout --detach FETCH_HEAD
+      - run: npm ci --prefix scripts
+      - run: node scripts/build-plugin.mjs "$RUNNER_TEMP/buzz-app"
+      - run: git diff --exit-code -- buzz-plugin/dist

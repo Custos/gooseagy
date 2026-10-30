@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""Launch Goose with the local Antigravity subscription adapter."""
+
+import os
+from pathlib import Path
+import shutil
+import sys
+
+ROOT = Path(__file__).resolve().parent.parent
+UNSUPPORTED = ("--with-extension", "--with-streamable-http-extension", "--with-builtin",
+               "--resume", "--fork", "--session-id", "--path", "--recipe", "--sub-recipe",
+               "--params", "--render-recipe", "--explain", "--container")
+VALUE_OPTIONS = {
+    "-t", "--text", "-i", "--instructions", "-n", "--name", "--model", "--system",
+    "--max-tool-repetitions", "--max-turns", "--output-format",
+}
+
+
+def validate_args(args):
+    skip_value = False
+    for arg in args:
+        if skip_value:
+            skip_value = False
+            continue
+        flag = arg.split("=", 1)[0]
+        if flag in UNSUPPORTED or flag in ("-r", "--provider"):
+            raise ValueError(f"unsupported option {flag}")
+        if arg == "--":
+            raise ValueError("positional arguments after -- are unsupported")
+        if arg.startswith("-") and not arg.startswith("--") and len(arg) > 2:
+            # Require separate short options, so a combined -qr cannot bypass
+            # the unsupported cross-process resume check.
+            raise ValueError("use separate short options or long options")
+        skip_value = flag in VALUE_OPTIONS and "=" not in arg
+
+
+def main():
+    args = sys.argv[1:]
+    if not args:
+        args = ["session"]
+    if args[0] == "doctor":
+        os.execv(sys.executable, [sys.executable, str(ROOT / "doctor.py"), *args[1:]])
+    if args[0] in ("-h", "--help"):
+        print("Usage: goose-agy [session|run] [Goose options]\n"
+              "       goose-agy doctor [--refresh-models] [--live]\n\n"
+              "Examples:\n"
+              "  goose-agy\n"
+              "  goose-agy run -t 'Explain this repository'\n"
+              "  goose-agy run --model gemini-4-argon-high -t 'Review this code'\n\n"
+              "Uses your agy login. Antigravity runs tools using its own permission settings.\n"
+              "Goose extensions and resuming/forking old Goose sessions are unsupported.\n"
+              "Set GOOSE_AGY_MODEL, GOOSE_AGY_EFFORT, GOOSE_AGY_MODE, or GOOSE_AGY_TIMEOUT\n"
+              "to configure the adapter. See README.md for details.")
+        return 0
+    if args[0] not in ("session", "s", "run"):
+        sys.exit("goose-agy supports session and run; use goose for other commands")
+    try:
+        validate_args(args[1:])
+    except ValueError as exc:
+        sys.exit(f"goose-agy: {exc}; see README.md")
+    goose = os.environ.get("GOOSE_AGY_GOOSE_COMMAND") or shutil.which("goose")
+    if not goose:
+        sys.exit("goose-agy: install Goose and put it on PATH")
+    adapter = ROOT / "adapter.py"
+    if not adapter.is_file():
+        sys.exit(f"goose-agy: adapter not found at {adapter}")
+    env = dict(os.environ)
+    env.update(GOOSE_PROVIDER="gemini-cli", GOOSE_MODEL=env.get("GOOSE_AGY_MODEL", "current"),
+               GEMINI_CLI_COMMAND=str(adapter))
+    # This transport cannot pass Goose extensions to agy. Avoid loading a profile
+    # that advertises tools the backend cannot call.
+    cmd = [goose, args[0], "--no-profile", *args[1:]]
+    os.execvpe(goose, cmd, env)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
