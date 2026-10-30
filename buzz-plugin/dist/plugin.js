@@ -8851,11 +8851,11 @@ var ARTIFACT_MAX_EVENT_BYTES = 512 * 1024 - 16;
 var encoder = new TextEncoder();
 
 // buzz-app/src/features/agents/agent-config.ts
-var pickSettings = (schema4, config3) => Object.fromEntries(
-  Object.keys(schema4).filter((name) => name in config3).map((name) => [name, config3[name]])
+var pickSettings = (schema4, config2) => Object.fromEntries(
+  Object.keys(schema4).filter((name) => name in config2).map((name) => [name, config2[name]])
 );
-var withSynced = (schema4, defaults, config3, settings) => ({
-  ...config3,
+var withSynced = (schema4, defaults, config2, settings) => ({
+  ...config2,
   ...pickSettings(schema4, defaults),
   ...pickSettings(schema4, settings)
 });
@@ -10333,20 +10333,6 @@ ${RESUMED_PROMPT}` : text3
   }
 };
 
-// buzz-app/src/bundled/goose/runtime.ts
-var DEFAULT_CONFIG2 = Object.freeze({
-  model: "",
-  provider: "",
-  effort: "",
-  instructions: "",
-  workspace: "~/.buzz",
-  scope: "thread"
-});
-var config2 = (value) => ({
-  ...DEFAULT_CONFIG2,
-  ...value && typeof value === "object" ? value : {}
-});
-
 // buzz-app/src/bundled/goose/settings.ts
 var syncedSettingsSchema = {
   model: "string",
@@ -10354,13 +10340,13 @@ var syncedSettingsSchema = {
   effort: "string",
   scope: ["thread", "channel"]
 };
-var withSyncedSettings = (config3, settings) => withSynced(syncedSettingsSchema, DEFAULT_CONFIG2, config3, settings);
+var withSyncedSettings = (config2, settings) => withSynced(syncedSettingsSchema, DEFAULT_CONFIG, config2, settings);
 
 // buzz-app/src/bundled/goose/run.ts
 var HANDOVER_MS = 2 * 6e4;
 var gooseRun = (runtime) => ({
   sessionControls: {
-    scope: (agent) => config2(agent.config).scope,
+    scope: (agent) => config(agent.config).scope,
     state: (agent, place) => runtime.sessionState(agent, place),
     run: (agent, place, action) => runtime.session(agent, place, action),
     subscribe: (listener) => runtime.subscribe(listener)

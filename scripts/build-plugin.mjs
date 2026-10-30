@@ -6,7 +6,9 @@ import { resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 process.chdir(root);
-const source = resolve(process.argv[2] || "/tmp/gooseagy-buzz-app-source");
+// macOS aliases /tmp to /private/tmp; resolve it before esbuild sees imports,
+// otherwise one source module can be bundled twice under different paths.
+const source = await realpath(resolve(process.argv[2] || "/tmp/gooseagy-buzz-app-source"));
 const upstream = "1c0f6d68ae11d834f6ac8a9287b3b983cc967275";
 if (execFileSync("git", ["-C", source, "rev-parse", "HEAD"], {encoding:"utf8"}).trim() !== upstream)
   throw new Error(`Build requires block/buzz-app at ${upstream}`);
